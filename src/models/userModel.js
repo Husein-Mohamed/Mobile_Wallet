@@ -1,20 +1,32 @@
-import mongoose from 'mongoose';
+// src/models/User.js
 
-// Define the user schema
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true // Ensures usernames are unique in the database
+import mongoose from "mongoose";
+
+const userSchema = new mongoose.Schema(
+  {
+    fullName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      unique: true,
+    },
+    pin: { type: String, required: false }, // Add the pin field here
+    password: { type: String, required: true },
+    balance: { type: Number, default: 0 }, // default balance set to 0
   },
-  password: {
-    type: String,
-    required: true
-  }
-  // Add additional fields as needed
-});
+  { timestamps: true }
+);
 
-// Create the model from the schema
-const User = mongoose.model('User', userSchema);
-
-export default User;
+export const User = mongoose.model("User", userSchema);

@@ -1,17 +1,27 @@
-// Import Router from the express module
-import { Router } from "express";
-import { signin, signup } from "../controllers/user.js";
 
-// Create a new router instance
-const userRouter = Router();
+import express from "express";
+import { deleteUser, getAllUsers, GetUserByID, setupPin, signin, signup, updateUserProfile } from "../controllers/user.js";
+import authenticateToken from "../middlewares/authenticateToken.js";
+import { requireAdminRole } from "../middlewares/requireAdminRole.js";
 
-// Define a GET route on the root of the userRouter
-userRouter.get('/', (req, res) => {
-  // Send a response when this route is accessed
-  res.send('Welcome to the User Page');
-});
+const userRouter = express.Router();
+
+// Simplify the route paths
+userRouter.get('/',authenticateToken,  getAllUsers);
+
 userRouter.post('/signup', signup);
+
 userRouter.post('/signin', signin);
 
-// Export the router for use in other parts of the application
+// Route for setting up the PIN, protected by the authenticateToken middleware
+userRouter.post('/setup-pin',authenticateToken, setupPin);
+
+
+userRouter.get('/user/:id', GetUserByID )
+
+userRouter.put('/profile', authenticateToken, updateUserProfile);
+
+// Route for deleting a user account, protected by authentication middleware
+userRouter.delete('/profile', authenticateToken, deleteUser);
+
 export default userRouter;
