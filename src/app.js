@@ -14,6 +14,10 @@ import merchantRoutes from './api/routes/merchantRoutes.js';
 import otpRoutes from './api/routes/otpRoutes.js';
 import crypto from 'crypto';
 import session from 'express-session';
+import expressStatusMonitor from 'express-status-monitor';
+
+
+
 const app = express();
 
 const secret = crypto.randomBytes(64).toString('hex');
@@ -46,6 +50,9 @@ app.use(cookieParser());
 app.use(express.json());
 connectDB();
 const port = 3000;
+
+// Set up express status monitor
+app.use(expressStatusMonitor());
 
 // Mount userRouter with the specific base path
 app.use("/api/v1/users", userRouter);

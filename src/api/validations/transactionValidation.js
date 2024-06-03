@@ -10,7 +10,7 @@ export const topUpSchema = z.object({
   amount: z.number().positive("Amount must be positive."),
   currency: z.string().default('USD'),
   source: z.enum(['card', 'account']),
-  pin: pinSchema.shape.pin, // Reuse pinSchema
+  // pin: pinSchema.shape.pin, // Reuse pinSchema
   sourceDetails: z.object({
     bankName: z.string().min(1, "Bank name is required."),
     accountNumber: z.string().min(1, "Account number is required."),

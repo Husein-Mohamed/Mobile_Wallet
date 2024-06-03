@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { verifyOtpController, verifySignupOtp, verifyTopUpOtp, verifyWithdrawOtp } from '../controllers/otpController.js';
+import {  verifySignupOtp, verifyTopUpOtp, verifyWithdrawOtp } from '../controllers/otpController.js';
 import authenticateToken from "../middlewares/authenticateToken.js";
 
 
 const router = Router();
 
 // Route to verify OTP
-router.post('/verify-otp', verifyOtpController);
+// router.post('/verify-otp', verifyOtpController);
 
 
 router.post('/verify-top-up', authenticateToken, verifyTopUpOtp);

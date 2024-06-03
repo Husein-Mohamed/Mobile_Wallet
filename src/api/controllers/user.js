@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
-import { generateJwtToken } from '../../utils/generateJwtToken.js'; // Import JWT service
+// import { generateJwtToken } from '../../utils/generateJwtToken.js'; // Import JWT service
 import { generateOtp,  storeOtp,  verifyOtp } from '../../utils/generateOtp.js'; // Import OTP service
 
 import { User } from "../../models/userModel.js";
@@ -12,6 +12,7 @@ import sendEmail from '../../utils/emailService.js';
 
 import sendOtpToWhatsapp from '../../utils/sendOtpToWhatsapp.js';
 import { jwtSecret } from '../../confic/confic.js';
+import { createResponse } from '../../utils/response.js';
 
 
 
@@ -145,6 +146,48 @@ export const GetUserByID = async (req, res) => {
   }
 };
 
+// export const signup = async (req, res) => {
+//   console.log(req.body);
+//   try {
+//     const validationResult = signupValidationSchema.safeParse(req.body);
+//     const { success, error: parseErrors, data } = validationResult;
+
+//     if (!success) {
+//       const errors = parseErrors.issues.map(issue => ({
+//         field: issue.path.join('.'),
+//         message: issue.message
+//       }));
+//       return res.status(400).send({ errors });
+    
+//     }
+ 
+//     const existingUser = await User.findOne({
+//       $or: [{ email: data.email.toLowerCase() }, { phoneNumber: data.phoneNumber }]
+//     });
+
+//     if (existingUser) {
+//       const field = existingUser.email === data.email.toLowerCase() ? "Email" : "Phone number";
+//       return res.status(409).send({ message: `${field} already exists.` });
+//     }
+
+//     const otp = generateOtp();
+//     await storeOtp(data.email, otp, 'signup');  // Using email as the identifier for OTP
+
+//     const emailOptions = {
+//       to: data.email,
+//       subject: 'Your OTP Code',
+//       text: `Your OTP code is ${otp}`,
+//     };
+
+//     await sendEmail(emailOptions);
+
+//     res.status(200).send({ message: 'OTP sent to your email. Please verify to complete the registration.' });
+//   } catch (error) {
+//     console.error('Error Details:', error);
+//     res.status(500).send('Error processing signup');
+//   }
+// };
+
 export const signup = async (req, res) => {
   console.log(req.body);
   try {
@@ -156,17 +199,16 @@ export const signup = async (req, res) => {
         field: issue.path.join('.'),
         message: issue.message
       }));
-      return res.status(400).send({ errors });
-    
+      return res.status(400).json(createResponse('error', 'Validation failed', { errors }));
     }
- 
+
     const existingUser = await User.findOne({
       $or: [{ email: data.email.toLowerCase() }, { phoneNumber: data.phoneNumber }]
     });
 
     if (existingUser) {
       const field = existingUser.email === data.email.toLowerCase() ? "Email" : "Phone number";
-      return res.status(409).send({ message: `${field} already exists.` });
+      return res.status(409).json(createResponse('error', `${field} already exists.`));
     }
 
     const otp = generateOtp();
@@ -180,13 +222,12 @@ export const signup = async (req, res) => {
 
     await sendEmail(emailOptions);
 
-    res.status(200).send({ message: 'OTP sent to your email. Please verify to complete the registration.' });
+    res.status(200).json(createResponse('success', 'OTP sent to your email. Please verify to complete the registration.'));
   } catch (error) {
     console.error('Error Details:', error);
-    res.status(500).send('Error processing signup');
+    res.status(500).json(createResponse('error', 'Error processing signup'));
   }
 };
-
 // Signin controller
 
 
@@ -200,13 +241,13 @@ export const signin = async (req, res) => {
     const user = await User.findOne(queryField);
     
     if (!user) {
-      return res.status(404).send("User not found");
+      return res.status(404).json(createResponse('error', 'User not found'));
     }
 
     // Compare the provided password with the hashed password in the database
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).send("Invalid credentials");
+      return res.status(401).json(createResponse('error', 'Invalid credentials'));
     }
 
     // Generate a JWT token
@@ -215,7 +256,7 @@ export const signin = async (req, res) => {
     // Set the token as a cookie in the response with security options
     res.cookie('jwt', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Ensure cookie is only sent over HTTPS in production
+      secure: false, // Ensure cookie is only sent over HTTPS in production
       sameSite: 'Strict', // Helps prevent CSRF attacks
       maxAge: 3600000 // 1 hour
     });
@@ -223,14 +264,11 @@ export const signin = async (req, res) => {
     // Remove sensitive fields like passwords from the user object
     const { password: _, ...userWithoutPassword } = user.toObject(); // This creates a copy excluding the password field
 
-    // Respond with user data without sensitive info
-    return res.status(200).send({
-      message: "Sign-in successful.",
-      user: userWithoutPassword // Send user data without sensitive info
-    });
+    // Respond with user data without sensitive info, including the token
+    return res.status(200).json(createResponse('success', 'Sign-in successful', { user: userWithoutPassword, token }));
   } catch (error) {
-    console.error("Signin Error:", error);
-    res.status(500).send("Error during the sign-in process");
+    console.error('Signin Error:', error);
+    res.status(500).json(createResponse('error', 'Error during the sign-in process'));
   }
 };
 
